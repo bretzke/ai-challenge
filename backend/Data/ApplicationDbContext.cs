@@ -16,6 +16,11 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Configure Price column to use REAL type in SQLite (for numeric operations)
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Price)
+            .HasColumnType("REAL");
+
         // Seed initial data
         modelBuilder.Entity<Product>().HasData(
             new Product
