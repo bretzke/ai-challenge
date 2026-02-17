@@ -10,7 +10,9 @@ public class GeminiService : IGeminiService
     private readonly IConfiguration _configuration;
     private readonly ILogger<GeminiService> _logger;
     private readonly string _apiKey;
-    private readonly string _apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+    private readonly string _modelName;
+    private readonly string _apiVersion;
+    private readonly string _apiBaseUrl;
 
     public GeminiService(HttpClient httpClient, IConfiguration configuration, ILogger<GeminiService> logger)
     {
@@ -18,6 +20,55 @@ public class GeminiService : IGeminiService
         _configuration = configuration;
         _logger = logger;
         _apiKey = _configuration["Gemini:ApiKey"] ?? throw new InvalidOperationException("Gemini API Key not configured");
+        _modelName = _configuration["Gemini:Model"] ?? "gemini-pro"; // Default to gemini-pro (most stable)
+        
+        // Use stable v1 API by default, allow override to v1beta for experimental features
+        _apiVersion = _configuration["Gemini:ApiVersion"] ?? "v1"; // v1 = stable, v1beta = experimental
+        _apiBaseUrl = $"https://generativelanguage.googleapis.com/{_apiVersion}/models";
+        
+        _logger.LogInformation($"Using Gemini API version: {_apiVersion} (v1=stable, v1beta=experimental)");
+        
+        // Set timeout for API calls
+        _httpClient.Timeout = TimeSpan.FromSeconds(30);
+        
+        // Configure API key header
+        ConfigureHttpClient();
+    }
+    
+    private string GetApiUrl() => $"{_apiBaseUrl}/{_modelName}:generateContent";
+    
+    private void ConfigureHttpClient()
+    {
+        // Clear any existing headers first
+        _httpClient.DefaultRequestHeaders.Clear();
+        
+        // Set API key as header (preferred method according to Google docs)
+        _httpClient.DefaultRequestHeaders.Add("x-goog-api-key", _apiKey);
+    }
+    
+    private async Task<HttpResponseMessage> TryGenerateContentAsync(string url, StringContent content, bool useQueryParam = false)
+    {
+        string finalUrl = url;
+        HttpClient client = _httpClient;
+        
+        if (useQueryParam)
+        {
+            finalUrl = $"{url}?key={_apiKey}";
+            // Create a new client without the header for query param method
+            client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(30);
+        }
+        else
+        {
+            // Ensure header is set
+            if (!client.DefaultRequestHeaders.Contains("x-goog-api-key"))
+            {
+                client.DefaultRequestHeaders.Add("x-goog-api-key", _apiKey);
+            }
+        }
+        
+        var response = await client.PostAsync(finalUrl, content);
+        return response;
     }
 
     public async Task<string> GenerateSQLAsync(string question, string schemaInfo)
@@ -50,10 +101,26 @@ public class GeminiService : IGeminiService
             var json = JsonConvert.SerializeObject(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync($"{_apiUrl}?key={_apiKey}", content);
-            response.EnsureSuccessStatusCode();
-
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var url = GetApiUrl();
+            _logger.LogInformation($"Calling Gemini API: {url} with model: {_modelName}");
+            
+            // Try with header first (preferred method)
+            HttpResponseMessage response = await TryGenerateContentAsync(url, content, useQueryParam: false);
+            string responseContent = await response.Content.ReadAsStringAsync();
+            
+            // If 404, try with query parameter
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning($"404 with header method, trying query parameter method");
+                response = await TryGenerateContentAsync(url, content, useQueryParam: true);
+                responseContent = await response.Content.ReadAsStringAsync();
+            }
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Gemini API error {response.StatusCode}: {responseContent}");
+                throw new HttpRequestException($"Gemini API returned {response.StatusCode}: {responseContent}");
+            }
             var geminiResponse = JsonConvert.DeserializeObject<GeminiResponse>(responseContent);
 
             if (geminiResponse?.Candidates == null || geminiResponse.Candidates.Length == 0)
@@ -62,7 +129,14 @@ public class GeminiService : IGeminiService
                 return string.Empty;
             }
 
-            var sql = geminiResponse.Candidates[0].Content.Parts[0].Text.Trim();
+            var candidate = geminiResponse.Candidates[0];
+            if (candidate?.Content?.Parts == null || candidate.Content.Parts.Length == 0)
+            {
+                _logger.LogWarning("Gemini response missing content parts");
+                return string.Empty;
+            }
+
+            var sql = candidate.Content.Parts[0].Text?.Trim() ?? string.Empty;
             
             // Extract SQL from markdown code blocks if present
             sql = ExtractSQLFromMarkdown(sql);
@@ -123,10 +197,26 @@ Seja conciso mas informativo. Se não houver dados, explique isso de forma amig�
             var json = JsonConvert.SerializeObject(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync($"{_apiUrl}?key={_apiKey}", content);
-            response.EnsureSuccessStatusCode();
-
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var url = GetApiUrl();
+            _logger.LogInformation($"Calling Gemini API for natural language: {url} with model: {_modelName}");
+            
+            // Try with header first (preferred method)
+            HttpResponseMessage response = await TryGenerateContentAsync(url, content, useQueryParam: false);
+            string responseContent = await response.Content.ReadAsStringAsync();
+            
+            // If 404, try with query parameter
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning($"404 with header method, trying query parameter method");
+                response = await TryGenerateContentAsync(url, content, useQueryParam: true);
+                responseContent = await response.Content.ReadAsStringAsync();
+            }
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Gemini API error {response.StatusCode}: {responseContent}");
+                return "Não foi possível gerar uma resposta em linguagem natural devido a um erro na API.";
+            }
             var geminiResponse = JsonConvert.DeserializeObject<GeminiResponse>(responseContent);
 
             if (geminiResponse?.Candidates == null || geminiResponse.Candidates.Length == 0)
@@ -134,7 +224,17 @@ Seja conciso mas informativo. Se não houver dados, explique isso de forma amig�
                 return "Não foi possível gerar uma resposta baseada nos dados.";
             }
 
-            return geminiResponse.Candidates[0].Content.Parts[0].Text.Trim();
+            var candidate = geminiResponse.Candidates[0];
+            if (candidate == null)
+            {
+                return "Não foi possível gerar uma resposta baseada nos dados.";
+            }
+            if (candidate?.Content?.Parts == null || candidate.Content.Parts.Length == 0)
+            {
+                return "Não foi possível gerar uma resposta baseada nos dados.";
+            }
+
+            return candidate.Content.Parts[0].Text?.Trim() ?? "Não foi possível gerar uma resposta.";
         }
         catch (Exception ex)
         {
