@@ -49,16 +49,24 @@ Colunas (use nomes em minúsculas no SQL):
 
             _logger.LogInformation($"Generated SQL: {sql}");
 
-            // Execute SQL query
-            var data = await ExecuteQueryAsync(sql);
+            var statements = _geminiService.GetValidSqlStatements(sql);
+            if (statements.Count == 0)
+            {
+                return new AIResponseDto
+                {
+                    Answer = "Nenhuma consulta SQL válida foi gerada. Por favor, tente reformular (use apenas uma consulta SELECT; se precisar de vários dados, una com UNION/subconsultas/CTEs).",
+                };
+            }
 
-            // Generate natural language answer using Gemini
+            // Only the first valid statement is executed (prompt asks for a single combined SQL)
+            var singleSql = statements[0];
+            var data = await ExecuteQueryAsync(singleSql);
             var answer = await _geminiService.GenerateNaturalLanguageAnswerAsync(question, data);
 
             return new AIResponseDto
             {
                 Answer = answer,
-                Sql = sql,
+                Sql = singleSql,
                 Data = data
             };
         }

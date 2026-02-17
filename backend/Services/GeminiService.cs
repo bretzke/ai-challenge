@@ -140,17 +140,9 @@ public class GeminiService : IGeminiService
             }
 
             var sql = candidate.Content.Parts[0].Text?.Trim() ?? string.Empty;
-            
-            // Extract SQL from markdown code blocks if present
             sql = ExtractSQLFromMarkdown(sql);
-            
-            // Validate SQL
-            if (!ValidateSQL(sql))
-            {
-                _logger.LogWarning($"Invalid SQL generated: {sql}");
+            if (string.IsNullOrWhiteSpace(sql) || sql.Equals("INVALID", StringComparison.OrdinalIgnoreCase))
                 return string.Empty;
-            }
-
             return sql;
         }
         catch (Exception ex)
@@ -165,7 +157,6 @@ public class GeminiService : IGeminiService
         try
         {
             var dataJson = JsonConvert.SerializeObject(data, Formatting.Indented);
-            
             var prompt = $@"Você é um assistente de IA que ajuda usuários a entender dados de um e-commerce.
 
 Pergunta do usuário: {question}
@@ -184,75 +175,44 @@ Use formatação Markdown para melhorar a legibilidade:
 - Use - para listas não ordenadas
 
 Seja conciso mas informativo. Se não houver dados, explique isso de forma amigável.";
-
-            var requestBody = new
-            {
-                contents = new[]
-                {
-                    new
-                    {
-                        parts = new[]
-                        {
-                            new { text = prompt }
-                        }
-                    }
-                },
-                generationConfig = new
-                {
-                    temperature = 0.7,
-                    topK = 40,
-                    topP = 0.95,
-                    maxOutputTokens = 1024,
-                }
-            };
-
-            var json = JsonConvert.SerializeObject(requestBody);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var url = GetApiUrl();
-            _logger.LogInformation($"Calling Gemini API for natural language: {url} with model: {_modelName}");
-            
-            // Try with header first (preferred method)
-            HttpResponseMessage response = await TryGenerateContentAsync(url, content, useQueryParam: false);
-            string responseContent = await response.Content.ReadAsStringAsync();
-            
-            // If 404, try with query parameter
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                _logger.LogWarning($"404 with header method, trying query parameter method");
-                response = await TryGenerateContentAsync(url, content, useQueryParam: true);
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogError($"Gemini API error {response.StatusCode}: {responseContent}");
-                return "Não foi possível gerar uma resposta em linguagem natural devido a um erro na API.";
-            }
-            var geminiResponse = JsonConvert.DeserializeObject<GeminiResponse>(responseContent);
-
-            if (geminiResponse?.Candidates == null || geminiResponse.Candidates.Length == 0)
-            {
-                return "Não foi possível gerar uma resposta baseada nos dados.";
-            }
-
-            var candidate = geminiResponse.Candidates[0];
-            if (candidate == null)
-            {
-                return "Não foi possível gerar uma resposta baseada nos dados.";
-            }
-            if (candidate?.Content?.Parts == null || candidate.Content.Parts.Length == 0)
-            {
-                return "Não foi possível gerar uma resposta baseada nos dados.";
-            }
-
-            return candidate.Content.Parts[0].Text?.Trim() ?? "Não foi possível gerar uma resposta.";
+            return await CallGeminiForTextAsync(prompt);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating natural language answer with Gemini");
             return "Não foi possível gerar uma resposta em linguagem natural.";
         }
+    }
+
+    private async Task<string> CallGeminiForTextAsync(string prompt)
+    {
+        var requestBody = new
+        {
+            contents = new[] { new { parts = new[] { new { text = prompt } } } },
+            generationConfig = new { temperature = 0.7, topK = 40, topP = 0.95, maxOutputTokens = 1024 }
+        };
+        var json = JsonConvert.SerializeObject(requestBody);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var url = GetApiUrl();
+        var response = await TryGenerateContentAsync(url, content, useQueryParam: false);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            response = await TryGenerateContentAsync(url, content, useQueryParam: true);
+            responseContent = await response.Content.ReadAsStringAsync();
+        }
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError($"Gemini API error {response.StatusCode}: {responseContent}");
+            return "Não foi possível gerar uma resposta em linguagem natural devido a um erro na API.";
+        }
+        var geminiResponse = JsonConvert.DeserializeObject<GeminiResponse>(responseContent);
+        if (geminiResponse?.Candidates == null || geminiResponse.Candidates.Length == 0)
+            return "Não foi possível gerar uma resposta baseada nos dados.";
+        var candidate = geminiResponse.Candidates[0];
+        if (candidate?.Content?.Parts == null || candidate.Content.Parts.Length == 0)
+            return "Não foi possível gerar uma resposta baseada nos dados.";
+        return candidate.Content.Parts[0].Text?.Trim() ?? "Não foi possível gerar uma resposta.";
     }
 
     private string BuildSQLPrompt(string question, string schemaInfo)
@@ -263,16 +223,35 @@ Esquema do banco de dados:
 {schemaInfo}
 
 IMPORTANTE:
-- Gere APENAS uma consulta SQL válida
+- Gere APENAS UMA consulta SQL válida. Se a pergunta exigir mais de um tipo de dado, prefira subconsultas ou CTE (WITH). Se usar UNION:
+  - Cada SELECT do UNION deve ter EXATAMENTE o mesmo número de colunas e tipos compatíveis.
+  - Use UNION ALL entre os SELECTs.
+  - CRÍTICO: Se precisar de ORDER BY ou LIMIT em cada SELECT antes do UNION, coloque cada SELECT dentro de PARÊNTESES como subconsulta: (SELECT ... ORDER BY ... LIMIT ...) UNION ALL (SELECT ... ORDER BY ... LIMIT ...)
+  - Não use ORDER BY diretamente em um SELECT que faz parte de UNION sem parênteses - isso causa erro de sintaxe no PostgreSQL.
 - Use apenas SELECT (nunca INSERT, UPDATE, DELETE, DROP, ALTER)
 - Não use funções perigosas ou comandos de sistema
 - Use nomes de tabelas e colunas exatamente como mostrado no esquema
 - Retorne apenas o SQL, sem explicações adicionais
 - Se a pergunta não puder ser respondida com SQL, retorne apenas 'INVALID'
 
+Exemplo de UNION válido com ORDER BY/LIMIT (observe os parênteses):
+(SELECT 'Mais caro' AS tipo, name, price FROM products ORDER BY price DESC LIMIT 1) UNION ALL (SELECT 'Mais barato' AS tipo, name, price FROM products ORDER BY price ASC LIMIT 1)
+
 Pergunta do usuário: {question}
 
 SQL:";
+    }
+
+    public List<string> GetValidSqlStatements(string sqlBlock)
+    {
+        if (string.IsNullOrWhiteSpace(sqlBlock))
+            return new List<string>();
+        var statements = sqlBlock
+            .Split(';', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
+            .Where(s => s.Length > 0 && ValidateSQL(s))
+            .ToList();
+        return statements;
     }
 
     private string ExtractSQLFromMarkdown(string text)
@@ -302,7 +281,7 @@ SQL:";
         var upperSql = sql.ToUpper().Trim();
 
         // Only allow SELECT statements
-        if (!upperSql.StartsWith("SELECT"))
+        if (!upperSql.StartsWith("SELECT") && !upperSql.StartsWith("(SELECT"))
         {
             return false;
         }
@@ -323,7 +302,7 @@ SQL:";
         {
             return false;
         }
-        var injectionWordPattern = new Regex(@"\b(UNION|SCRIPT|JAVASCRIPT)\b", RegexOptions.IgnoreCase);
+        var injectionWordPattern = new Regex(@"\b(SCRIPT|JAVASCRIPT)\b", RegexOptions.IgnoreCase);
         if (injectionWordPattern.IsMatch(upperSql))
         {
             return false;

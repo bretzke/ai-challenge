@@ -7,7 +7,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   sql?: string
-  data?: any
+  data?: Record<string, unknown>[]
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
@@ -136,7 +136,7 @@ export default function AIAssistant() {
                   <summary className="cursor-pointer font-semibold text-gray-700">
                     SQL Gerado
                   </summary>
-                  <pre className="mt-2 text-xs overflow-auto bg-gray-800 text-green-400 p-3 rounded">
+                  <pre className="mt-2 text-xs overflow-auto bg-gray-800 text-green-400 p-3 rounded whitespace-pre-wrap">
                     <code>{message.sql}</code>
                   </pre>
                 </details>
@@ -160,9 +160,9 @@ export default function AIAssistant() {
                           </tr>
                         </thead>
                         <tbody>
-                          {message.data.map((row: any, idx: number) => (
+                          {message.data.map((row: Record<string, unknown>, idx: number) => (
                             <tr key={idx} className="hover:bg-gray-50">
-                              {Object.values(row).map((value: any, cellIdx: number) => (
+                              {Object.values(row).map((value: unknown, cellIdx: number) => (
                                 <td key={cellIdx} className="p-2 border border-gray-300">
                                   {String(value)}
                                 </td>
