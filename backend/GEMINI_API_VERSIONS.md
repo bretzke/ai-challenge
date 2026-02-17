@@ -1,76 +1,61 @@
 # Versões da API Gemini
 
-## Versão Estável: v1
+## Versão Utilizada: v1 (Estável)
+
+A aplicação usa **exclusivamente a API v1 (estável)** do Google Gemini.
 
 ✅ **Versão estável** - garantida para produção  
 ✅ **Suporte garantido** - sem breaking changes durante a vida útil da versão  
 ✅ **Recomendada para produção** - estabilidade garantida  
-✅ **Mesmos recursos principais** - text generation, multi-turn, function calls, etc.
+✅ **Recursos completos** - text generation, multi-turn, function calls, NL2SQL, etc.
 
-## Diferenças
+## Modelo: gemini-2.0-flash
 
-| Característica             | v1 (Stable)                   | v1beta (Experimental) |
-| -------------------------- | ----------------------------- | --------------------- |
-| **Estabilidade**           | ✅ Garantida                  | ⚠️ Pode mudar         |
-| **Breaking Changes**       | ❌ Não (exceto major version) | ⚠️ Sem aviso          |
-| **Produção**               | ✅ Recomendado                | ❌ Não recomendado    |
-| **Recursos Experimentais** | ❌ Não                        | ✅ Sim                |
-| **Suporte**                | ✅ Garantido                  | ⚠️ Limitado           |
+O modelo padrão utilizado é **`gemini-2.0-flash`**:
+- ✅ Versão mais recente e otimizada
+- ✅ Melhor performance e precisão
+- ✅ Suporte completo a NL2SQL
+- ✅ Respostas rápidas e eficientes
 
 ## Configuração
 
-### Usar v1 (Estável) - Recomendado
+### Configuração Recomendada
 
 ```json
 {
   "Gemini": {
     "ApiKey": "SUA_API_KEY",
-    "Model": "gemini-pro",
-    "ApiVersion": "v1"
+    "Model": "gemini-2.0-flash"
   }
 }
 ```
 
-### Usar v1beta (Experimental) - Apenas para testes
+**Nota**: A versão da API (v1) é fixa no código e não precisa ser configurada. Apenas o modelo pode ser customizado se necessário.
 
-```json
-{
-  "Gemini": {
-    "ApiKey": "SUA_API_KEY",
-    "Model": "gemini-pro",
-    "ApiVersion": "v1beta"
-  }
-}
-```
+## Modelos Disponíveis
 
-## Quando usar cada versão?
+O modelo padrão é `gemini-2.0-flash`, mas você pode usar outros modelos se necessário:
 
-### Use v1 quando:
+- `gemini-2.0-flash` ✅ (Recomendado - padrão)
+- `gemini-1.5-pro` (Alternativa mais poderosa)
+- `gemini-1.5-flash` (Alternativa mais rápida)
 
-- ✅ Desenvolvendo para produção
-- ✅ Precisa de estabilidade
-- ✅ Não pode tolerar breaking changes
-- ✅ Quer garantia de suporte
+## Implementação
 
-### Use v1beta quando:
+O código:
+1. **Usa v1 exclusivamente** (versão estável)
+2. **Modelo padrão**: `gemini-2.0-flash`
+3. **Configurável**: Modelo pode ser alterado via `appsettings.json`
+4. **Loga**: Versão da API e modelo em uso para debugging
 
-- ⚠️ Testando recursos experimentais
-- ⚠️ Desenvolvimento/experimentação
-- ⚠️ Precisa de features mais recentes
-- ⚠️ Pode tolerar mudanças inesperadas
-
-## Mudança Implementada
-
-O código agora:
-
-1. **Usa v1 por padrão** (estável)
-2. **Permite override** via configuração para v1beta se necessário
-3. **Loga qual versão está sendo usada** para debugging
-
-## Endpoints
+## Endpoint
 
 - **v1**: `https://generativelanguage.googleapis.com/v1/models/{model}:generateContent`
-- **v1beta**: `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`
+
+**Exemplo com gemini-2.0-flash**:
+```
+https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent
+```
 
 ## Referências
 

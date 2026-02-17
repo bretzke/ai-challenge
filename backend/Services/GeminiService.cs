@@ -20,13 +20,13 @@ public class GeminiService : IGeminiService
         _configuration = configuration;
         _logger = logger;
         _apiKey = _configuration["Gemini:ApiKey"] ?? throw new InvalidOperationException("Gemini API Key not configured");
-        _modelName = _configuration["Gemini:Model"] ?? "gemini-pro"; // Default to gemini-pro (most stable)
+        _modelName = _configuration["Gemini:Model"] ?? "gemini-2.0-flash"; // Default to gemini-2.0-flash
         
-        // Use stable v1 API by default, allow override to v1beta for experimental features
-        _apiVersion = _configuration["Gemini:ApiVersion"] ?? "v1"; // v1 = stable, v1beta = experimental
+        // Use stable v1 API
+        _apiVersion = "v1"; // Always use stable v1 API
         _apiBaseUrl = $"https://generativelanguage.googleapis.com/{_apiVersion}/models";
         
-        _logger.LogInformation($"Using Gemini API version: {_apiVersion} (v1=stable, v1beta=experimental)");
+        _logger.LogInformation($"Using Gemini API version: {_apiVersion} with model: {_modelName}");
         
         // Set timeout for API calls
         _httpClient.Timeout = TimeSpan.FromSeconds(30);

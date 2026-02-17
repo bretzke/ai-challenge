@@ -23,7 +23,8 @@ Edite `backend/appsettings.Development.json`:
     }
   },
   "Gemini": {
-    "ApiKey": "SUA_API_KEY_AQUI"
+    "ApiKey": "SUA_API_KEY_AQUI",
+    "Model": "gemini-2.0-flash"
   }
 }
 ```

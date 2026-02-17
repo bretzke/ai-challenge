@@ -33,16 +33,19 @@ ai-challenge/
 ### Backend (.NET)
 
 1. Navegue até a pasta do backend:
+
 ```bash
 cd backend
 ```
 
 2. Restaure as dependências:
+
 ```bash
 dotnet restore
 ```
 
 3. Execute a aplicação:
+
 ```bash
 dotnet run
 ```
@@ -54,11 +57,13 @@ A API estará disponível em `http://localhost:5000` (ou outra porta indicada no
 ### Frontend (Next.js)
 
 1. Navegue até a pasta do frontend:
+
 ```bash
 cd frontend
 ```
 
 2. Instale as dependências:
+
 ```bash
 npm install
 # ou
@@ -66,6 +71,7 @@ yarn install
 ```
 
 3. Execute o servidor de desenvolvimento:
+
 ```bash
 npm run dev
 # ou
@@ -89,6 +95,7 @@ Se não configurar, o frontend usará `http://localhost:5000/api` por padrão.
 ### Frontend (Next.js)
 
 #### 1. **Página SSR** (`/` - `frontend/app/page.tsx`)
+
 - **Renderização**: Server-Side Rendering
 - **Funcionalidade**: Lista de produtos do e-commerce
 - **Integração**: Consome a API .NET para buscar produtos
@@ -98,6 +105,7 @@ Se não configurar, o frontend usará `http://localhost:5000/api` por padrão.
   - Permite CRUD completo (Create, Read, Update, Delete)
 
 #### 2. **Página SSG** (`/about` - `frontend/app/about/page.tsx`)
+
 - **Renderização**: Static Site Generation
 - **Funcionalidade**: Página "Sobre" com FAQ
 - **Características**:
@@ -107,6 +115,7 @@ Se não configurar, o frontend usará `http://localhost:5000/api` por padrão.
   - Ideal para conteúdo que não muda frequentemente
 
 #### 3. **Página CSR** (`/ai-assistant` - `frontend/app/ai-assistant/page.tsx`)
+
 - **Renderização**: Client-Side Rendering
 - **Funcionalidade**: Assistente de IA para perguntas em linguagem natural
 - **Integração**: Consome endpoint `/api/ai/query` do backend
@@ -119,6 +128,7 @@ Se não configurar, o frontend usará `http://localhost:5000/api` por padrão.
 ### Backend (.NET)
 
 #### API REST
+
 - **Framework**: ASP.NET Core 8.0
 - **Banco de Dados**: SQLite (Entity Framework Core)
 - **Endpoints**:
@@ -134,12 +144,14 @@ Se não configurar, o frontend usará `http://localhost:5000/api` por padrão.
 **Arquitetura Escolhida**: A integração com IA foi implementada no **backend** através do serviço `AIService` usando **Google Gemini**.
 
 **Justificativa**:
+
 1. **Segurança**: SQL é gerado e executado no servidor, evitando exposição de estrutura do banco
 2. **Performance**: Processamento no servidor é mais eficiente
 3. **Controle**: Validação e sanitização de queries SQL são feitas antes da execução
 4. **Escalabilidade**: Facilita cache e otimizações futuras
 
 **Implementação Atual**:
+
 - Integração com Google Gemini Pro para NL2SQL
 - Geração de SQL baseada em contexto e schema do banco
 - Validação rigorosa de SQL (apenas SELECT, bloqueio de comandos perigosos)
@@ -147,17 +159,30 @@ Se não configurar, o frontend usará `http://localhost:5000/api` por padrão.
 - Execução segura de queries usando Entity Framework
 
 **Configuração**:
+
 1. Obtenha uma API Key do Google Gemini em: https://makersuite.google.com/app/apikey
 2. Configure no `appsettings.json` ou `appsettings.Development.json`:
+
 ```json
 {
   "Gemini": {
-    "ApiKey": "SUA_API_KEY_AQUI"
+    "ApiKey": "SUA_API_KEY_AQUI",
+    "Model": "gemini-2.0-flash"
   }
 }
 ```
 
+**Opções de Configuração**:
+
+- `ApiKey` (obrigatório): Sua chave de API do Google Gemini
+- `Model` (opcional): Modelo a usar. Padrão: `gemini-2.0-flash`
+
+**Nota**: A aplicação usa a API v1 (estável) do Gemini. O modelo `gemini-2.0-flash` é o recomendado para melhor performance e precisão.
+
+Veja mais detalhes em `backend/GEMINI_SETUP.md`.
+
 **Segurança**:
+
 - Validação de SQL antes da execução
 - Bloqueio de comandos perigosos (INSERT, UPDATE, DELETE, DROP, etc.)
 - Proteção contra SQL injection
@@ -187,6 +212,7 @@ Products
 ## 🎯 Funcionalidades
 
 ### CRUD de Produtos
+
 - ✅ Listar produtos (SSR)
 - ✅ Criar produto
 - ✅ Editar produto
@@ -194,6 +220,7 @@ Products
 - ✅ Tratamento de loading, erro e lista vazia
 
 ### Assistente de IA
+
 - ✅ Interface de chat
 - ✅ Processamento de perguntas em linguagem natural
 - ✅ Geração de SQL baseado na pergunta
@@ -203,6 +230,7 @@ Products
 - ✅ Exibição dos dados retornados
 
 ### Exemplos de Perguntas Suportadas
+
 - "Quantos produtos temos?"
 - "Qual é o produto mais caro?"
 - "Liste todos os produtos da categoria Eletrônicos"
@@ -213,12 +241,14 @@ Products
 ## 🔧 Decisões Técnicas
 
 ### Frontend
+
 - **Next.js 14**: App Router para melhor organização
 - **TypeScript**: Type safety em todo o código
 - **CSS Modules**: Estilos globais simples e reutilizáveis
 - **Client Components**: Apenas onde necessário (interatividade)
 
 ### Backend
+
 - **.NET 8**: Última versão LTS
 - **Entity Framework Core**: ORM para facilitar desenvolvimento
 - **SQLite**: Banco leve e fácil de configurar
@@ -226,34 +256,58 @@ Products
 - **DTOs**: Transferência de dados tipada
 
 ### IA/NL2SQL
-- **Pattern Matching**: Implementação inicial simples e funcional
-- **Backend Processing**: Segurança e controle
-- **Extensível**: Fácil migração para LLM real no futuro
+
+- **Google Gemini**: Integração com Gemini Pro para NL2SQL e geração de respostas em linguagem natural
+- **API v1 (Stable)**: Usa versão estável da API para garantir estabilidade em produção
+- **Validação de SQL**: Validação rigorosa antes da execução para segurança
+- **Backend Processing**: Segurança e controle total sobre queries geradas
 
 ## ⚠️ Limitações Técnicas
 
-1. **IA Simplificada**: A implementação atual usa pattern matching básico. Para produção, recomenda-se integração com OpenAI, Azure OpenAI ou modelo especializado em NL2SQL.
+1. **Dependência de API Externa**: A aplicação depende da API do Google Gemini. Requer:
+   - API Key válida e configurada
+   - Conexão com internet estável
+   - Respeito aos limites de rate da API (varia conforme o plano)
+   - Possíveis custos conforme uso (consulte: https://ai.google.dev/pricing)
 
-2. **Segurança SQL**: Embora use Entity Framework, queries dinâmicas precisam de validação adicional em produção.
+2. **Modelo LLM**: Usa Google Gemini 2.0 Flash, que pode ter limitações em:
+   - Queries muito complexas ou ambíguas podem gerar SQL incorreto
+   - Latência de resposta depende da API do Google
+   - Disponibilidade do modelo pode variar por região
 
-3. **CORS**: Configurado apenas para `localhost:3000`. Em produção, ajustar conforme necessário.
+3. **Validação de SQL**: Embora tenha validação rigorosa (apenas SELECT, bloqueio de comandos perigosos), queries dinâmicas geradas por IA podem:
+   - Requer validação adicional para casos edge em produção
+   - Beneficiar-se de testes mais abrangentes
+   - Necessitar de fallback para queries manuais em caso de falha
 
-4. **Autenticação**: Não implementada (não era requisito do desafio).
+4. **CORS**: Configurado apenas para `localhost:3000`. Em produção, ajustar conforme necessário.
 
-5. **Validação**: Validações básicas implementadas. Em produção, adicionar validações mais robustas.
+5. **Autenticação**: Não implementada (não era requisito do desafio). Em produção, adicionar:
+   - Autenticação de usuários
+   - Rate limiting por usuário
+   - Logs de auditoria para queries geradas
+
+6. **Tratamento de Erros da API**: Erros da API Gemini são tratados, mas podem ser melhorados com:
+   - Retry logic para falhas temporárias
+   - Cache de respostas para perguntas similares
+   - Fallback para respostas padrão quando a API estiver indisponível
 
 ## 🚀 Melhorias Futuras (Diferenciais)
 
 - [ ] Docker e Docker Compose para facilitar setup
 - [ ] Testes unitários e de integração
-- [ ] Integração com OpenAI GPT-4 para NL2SQL mais preciso
+- [ ] Retry logic e circuit breaker para chamadas à API Gemini
+- [ ] Cache inteligente de respostas da IA (usando embeddings para encontrar perguntas similares)
 - [ ] Autenticação e autorização
+- [ ] Rate limiting por usuário/IP
 - [ ] Paginação nas listagens
 - [ ] Busca e filtros avançados
 - [ ] Upload de imagens para produtos
-- [ ] Cache de respostas da IA
-- [ ] Logging estruturado
-- [ ] Monitoramento e métricas
+- [ ] Logging estruturado com correlação de requisições
+- [ ] Monitoramento e métricas (tempo de resposta, taxa de sucesso, etc.)
+- [ ] Suporte a múltiplos modelos (fallback automático se um falhar)
+- [ ] Histórico de conversação para contexto entre perguntas
+- [ ] Validação de schema dinâmico (detectar mudanças no banco automaticamente)
 
 ## 📝 Notas de Desenvolvimento
 
@@ -268,5 +322,3 @@ Products
 Desenvolvido como parte do desafio técnico fullstack.
 
 ---
-
-**Desenvolvido com ❤️ usando Next.js e .NET**
