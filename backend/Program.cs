@@ -1,23 +1,21 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using ECommerceAPI.Data;
 using ECommerceAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load environment variables from .env file (for development)
-if (builder.Environment.IsDevelopment())
+// Load environment variables from .env file (any environment)
+var root = Directory.GetCurrentDirectory();
+var dotenv = Path.Combine(root, ".env");
+if (File.Exists(dotenv))
 {
-    var root = Directory.GetCurrentDirectory();
-    var dotenv = Path.Combine(root, ".env");
-    if (File.Exists(dotenv))
+    foreach (var line in File.ReadAllLines(dotenv))
     {
-        foreach (var line in File.ReadAllLines(dotenv))
+        var parts = line.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 2)
         {
-            var parts = line.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 2)
-            {
-                Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
-            }
+            Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
         }
     }
 }
@@ -27,9 +25,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Database
+// Database (PostgreSQL - connection string from .env only)
+var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
+    ?? throw new InvalidOperationException(
+        "Database connection not configured. Set DB_CONNECTION in the backend .env file (e.g. DB_CONNECTION=Host=localhost;Port=5432;Database=ecommerce;Username=postgres;Password=postgres)");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite("Data Source=ecommerce.db"));
+    options.UseNpgsql(connectionString));
 
 // CORS
 builder.Services.AddCors(options =>

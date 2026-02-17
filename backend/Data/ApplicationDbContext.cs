@@ -16,13 +16,50 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configure Price column to use REAL type in SQLite (for numeric operations)
-        modelBuilder.Entity<Product>()
-            .Property(p => p.Price)
-            .HasColumnType("REAL");
+        var product = modelBuilder.Entity<Product>();
 
-        // Seed initial data
-        modelBuilder.Entity<Product>().HasData(
+        // Table name lowercase so raw SQL (e.g. from AI) works: PostgreSQL lowercases unquoted identifiers
+        product.ToTable("products");
+
+        // Column names lowercase so raw SQL from AI works (PostgreSQL lowercases unquoted identifiers)
+        product.Property(p => p.Id)
+            .HasColumnName("id")
+            .UseIdentityByDefaultColumn();
+
+        product.Property(p => p.Name)
+            .HasColumnName("name")
+            .HasMaxLength(500)
+            .IsRequired();
+
+        product.Property(p => p.Description)
+            .HasColumnName("description")
+            .IsRequired();
+
+        product.Property(p => p.Price)
+            .HasColumnName("price")
+            .HasPrecision(18, 2);
+
+        product.Property(p => p.Category)
+            .HasColumnName("category")
+            .HasMaxLength(200)
+            .IsRequired();
+
+        product.Property(p => p.Stock)
+            .HasColumnName("stock")
+            .IsRequired();
+
+        product.Property(p => p.CreatedAt)
+            .HasColumnName("created_at")
+            .HasColumnType("timestamptz");
+
+        product.Property(p => p.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasColumnType("timestamptz");
+
+        // Seed initial data (fixed dates for reproducibility)
+        // date now
+        var seedDate = DateTime.UtcNow;
+        product.HasData(
             new Product
             {
                 Id = 1,
@@ -31,8 +68,8 @@ public class ApplicationDbContext : DbContext
                 Price = 4500.00m,
                 Category = "Eletrônicos",
                 Stock = 15,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
             },
             new Product
             {
@@ -42,8 +79,8 @@ public class ApplicationDbContext : DbContext
                 Price = 2500.00m,
                 Category = "Eletrônicos",
                 Stock = 30,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
             },
             new Product
             {
@@ -53,8 +90,8 @@ public class ApplicationDbContext : DbContext
                 Price = 800.00m,
                 Category = "Móveis",
                 Stock = 8,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
             },
             new Product
             {
@@ -64,8 +101,8 @@ public class ApplicationDbContext : DbContext
                 Price = 1200.00m,
                 Category = "Móveis",
                 Stock = 12,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
             },
             new Product
             {
@@ -75,8 +112,8 @@ public class ApplicationDbContext : DbContext
                 Price = 89.90m,
                 Category = "Livros",
                 Stock = 50,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
             }
         );
     }

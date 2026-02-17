@@ -307,24 +307,26 @@ SQL:";
             return false;
         }
 
-        // Block dangerous keywords
-        var dangerousKeywords = new[] { "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "TRUNCATE", "EXEC", "EXECUTE", "EXECUTE_IMMEDIATE" };
-        foreach (var keyword in dangerousKeywords)
+        // Block dangerous keywords as whole words only (so "CreatedAt" column is allowed)
+        // Longer phrases first so e.g. EXECUTE_IMMEDIATE matches before EXECUTE
+        var dangerousKeywordPattern = new Regex(
+            @"\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|EXECUTE_IMMEDIATE|EXECUTE|EXEC)\b",
+            RegexOptions.IgnoreCase);
+        if (dangerousKeywordPattern.IsMatch(upperSql))
         {
-            if (upperSql.Contains(keyword))
-            {
-                return false;
-            }
+            return false;
         }
 
-        // Block SQL injection patterns
-        var injectionPatterns = new[] { "--", "/*", "*/", "xp_", "sp_", "UNION", "SCRIPT", "JAVASCRIPT" };
-        foreach (var pattern in injectionPatterns)
+        // Block SQL injection patterns (comments and dangerous prefixes as substring; words as whole word)
+        if (upperSql.Contains("--") || upperSql.Contains("/*") || upperSql.Contains("*/") ||
+            upperSql.Contains("xp_") || upperSql.Contains("sp_"))
         {
-            if (upperSql.Contains(pattern))
-            {
-                return false;
-            }
+            return false;
+        }
+        var injectionWordPattern = new Regex(@"\b(UNION|SCRIPT|JAVASCRIPT)\b", RegexOptions.IgnoreCase);
+        if (injectionWordPattern.IsMatch(upperSql))
+        {
+            return false;
         }
 
         return true;

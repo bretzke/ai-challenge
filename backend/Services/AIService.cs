@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ECommerceAPI.Data;
 using ECommerceAPI.DTOs;
-using System.Data.Common;
-using Microsoft.Data.Sqlite;
 
 namespace ECommerceAPI.Services;
 
@@ -23,18 +21,18 @@ public class AIService : IAIService
     {
         try
         {
-            // Schema information for the AI to understand the database structure
+            // Schema information for the AI (table and columns are lowercase in PostgreSQL)
             var schemaInfo = @"
-Tabela: Products
-Colunas:
-- Id (int): ID único do produto
-- Name (string): Nome do produto
-- Description (string): Descrição do produto
-- Price (decimal): Preço do produto em reais
-- Category (string): Categoria do produto (ex: Eletrônicos, Móveis, Livros)
-- Stock (int): Quantidade em estoque
-- CreatedAt (datetime): Data de criação
-- UpdatedAt (datetime): Data de atualização
+Tabela: products (sempre use 'products' no FROM)
+Colunas (use nomes em minúsculas no SQL):
+- id (int): ID único do produto
+- name (string): Nome do produto
+- description (string): Descrição do produto
+- price (decimal): Preço do produto em reais
+- category (string): Categoria do produto (ex: Eletrônicos, Móveis, Livros)
+- stock (int): Quantidade em estoque
+- created_at (timestamptz): Data de criação
+- updated_at (timestamptz): Data de atualização
 ";
 
             // Generate SQL using Gemini

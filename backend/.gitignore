@@ -4,9 +4,6 @@ obj/
 *.user
 *.suo
 *.cache
-ecommerce.db
-ecommerce.db-shm
-ecommerce.db-wal
 
 # Environment variables
 .env

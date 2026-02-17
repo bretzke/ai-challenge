@@ -2,14 +2,23 @@
 
 ## Passo a Passo
 
-### 1. Backend (.NET)
+### 1. PostgreSQL (Docker)
 
-**Antes de executar, configure a API Key do Gemini:**
+Na raiz do projeto:
+
+```bash
+docker compose up -d postgres
+```
+
+### 2. Backend (.NET)
+
+**Antes de executar, crie o `.env` (conexão e Gemini):**
 
 ```bash
 cd backend
 cp .env.example .env
-# Edite o arquivo .env e adicione sua API Key: GEMINI_API_KEY=sua_chave_aqui
+# Edite .env: GEMINI_API_KEY=sua_chave_aqui
+# A connection string do PostgreSQL já vem no .env.example (ajuste se necessário)
 ```
 
 Depois execute:
@@ -22,7 +31,7 @@ dotnet run
 A API estará em `http://localhost:5000`
 Swagger em `http://localhost:5000/swagger`
 
-### 2. Frontend (Next.js)
+### 3. Frontend (Next.js)
 
 Em outro terminal:
 
@@ -52,4 +61,5 @@ Na página `/ai-assistant`, tente perguntas como:
 
 ## ⚠️ Importante
 
-Certifique-se de que o backend está rodando antes de iniciar o frontend!
+- Suba o PostgreSQL com `docker compose up -d postgres` antes do backend.
+- Certifique-se de que o backend está rodando antes de iniciar o frontend.

@@ -3,6 +3,8 @@ import ProductList from "@/components/ProductList";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
+export const dynamic = "force-dynamic";
+
 async function getProducts(): Promise<Product[]> {
   try {
     const res = await fetch(`${API_URL}/products`, {

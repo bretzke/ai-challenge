@@ -28,7 +28,18 @@ ai-challenge/
 
 - Node.js 18+ e npm/yarn
 - .NET 8.0 SDK
+- Docker e Docker Compose (para PostgreSQL)
 - Git
+
+### Banco de Dados (PostgreSQL com Docker)
+
+1. Na raiz do projeto, suba o PostgreSQL:
+
+```bash
+docker compose up -d postgres
+```
+
+2. O banco estará em `localhost:5432` (usuário `postgres`, senha `postgres`, database `ecommerce`).
 
 ### Backend (.NET)
 
@@ -44,7 +55,9 @@ cd backend
 dotnet restore
 ```
 
-3. Execute a aplicação:
+3. Configure o backend via arquivo `.env`: copie `backend/.env.example` para `backend/.env`, defina `GEMINI_API_KEY` e a connection string do PostgreSQL (`DB_CONNECTION`). A conexão com o banco **não** é lida de `appsettings` — apenas do `.env`.
+
+4. Execute a aplicação:
 
 ```bash
 dotnet run
@@ -130,7 +143,7 @@ Se não configurar, o frontend usará `http://localhost:5000/api` por padrão.
 #### API REST
 
 - **Framework**: ASP.NET Core 8.0
-- **Banco de Dados**: SQLite (Entity Framework Core)
+- **Banco de Dados**: PostgreSQL (Entity Framework Core, Npgsql)
 - **Endpoints**:
   - `GET /api/products` - Lista todos os produtos
   - `GET /api/products/{id}` - Busca produto por ID
@@ -191,24 +204,23 @@ Veja mais detalhes em `backend/GEMINI_SETUP.md`.
 
 ## 🗄️ Banco de Dados
 
-- **Tecnologia**: SQLite
-- **ORM**: Entity Framework Core
+- **Tecnologia**: PostgreSQL (Docker Compose na raiz do projeto)
+- **ORM**: Entity Framework Core (Npgsql)
 - **Migrations**: Auto-criado na primeira execução (`EnsureCreated`)
 - **Dados Iniciais**: Seed automático com 5 produtos de exemplo
 
-### Schema
+### Schema (PostgreSQL)
 
-```sql
-Products
-├── Id (int, PK)
-├── Name (string)
-├── Description (string)
-├── Price (decimal)
-├── Category (string)
-├── Stock (int)
-├── CreatedAt (datetime)
-└── UpdatedAt (datetime)
-```
+| Coluna     | Tipo             | Descrição                    |
+|-----------|------------------|------------------------------|
+| Id        | SERIAL (PK)      | ID único                     |
+| Name      | VARCHAR(500)     | Nome do produto              |
+| Description | TEXT           | Descrição                    |
+| Price     | NUMERIC(18,2)    | Preço (valores monetários)   |
+| Category  | VARCHAR(200)     | Categoria                    |
+| Stock     | INTEGER          | Quantidade em estoque        |
+| CreatedAt | TIMESTAMPTZ      | Data de criação (UTC)        |
+| UpdatedAt | TIMESTAMPTZ      | Data de atualização (UTC)    |
 
 ## 🎯 Funcionalidades
 
@@ -251,8 +263,8 @@ Products
 ### Backend
 
 - **.NET 8**: Última versão LTS
-- **Entity Framework Core**: ORM para facilitar desenvolvimento
-- **SQLite**: Banco leve e fácil de configurar
+- **Entity Framework Core**: ORM com Npgsql para PostgreSQL
+- **PostgreSQL**: Banco relacional via Docker Compose; tipos adequados (NUMERIC, TIMESTAMPTZ, etc.)
 - **Repository Pattern**: Separação de responsabilidades através de Services
 - **DTOs**: Transferência de dados tipada
 
@@ -295,7 +307,7 @@ Products
 
 ## 🚀 Melhorias Futuras (Diferenciais)
 
-- [ ] Docker e Docker Compose para facilitar setup
+- [x] Docker Compose com PostgreSQL
 - [ ] Testes unitários e de integração
 - [ ] Retry logic e circuit breaker para chamadas à API Gemini
 - [ ] Cache inteligente de respostas da IA (usando embeddings para encontrar perguntas similares)
