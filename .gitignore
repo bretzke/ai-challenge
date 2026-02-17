@@ -41,3 +41,7 @@ backend/.env.*.local
 .env
 .env.local
 .env.*.local
+
+*.md
+!README.md
+!QUICKSTART.md
