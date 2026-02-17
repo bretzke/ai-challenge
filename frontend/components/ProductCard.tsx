@@ -8,40 +8,38 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
   return (
-    <div className="card">
-      <h3 style={{ marginBottom: '0.5rem', color: '#2c3e50' }}>{product.name}</h3>
-      <p style={{ marginBottom: '1rem', color: '#666' }}>{product.description}</p>
+    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+      <h3 className="text-xl font-semibold mb-2 text-slate-800">{product.name}</h3>
+      <p className="text-gray-600 mb-4">{product.description}</p>
       
-      <div style={{ marginBottom: '1rem' }}>
-        <strong style={{ fontSize: '1.5rem', color: '#27ae60' }}>
+      <div className="mb-4">
+        <strong className="text-2xl text-green-600">
           R$ {product.price.toFixed(2)}
         </strong>
       </div>
 
-      <div style={{ marginBottom: '1rem', fontSize: '0.9rem' }}>
-        <span style={{ color: '#666' }}>Categoria: </span>
-        <strong>{product.category}</strong>
+      <div className="text-sm mb-2">
+        <span className="text-gray-600">Categoria: </span>
+        <strong className="text-slate-800">{product.category}</strong>
       </div>
 
-      <div style={{ marginBottom: '1rem', fontSize: '0.9rem' }}>
-        <span style={{ color: '#666' }}>Estoque: </span>
-        <strong style={{ color: product.stock > 0 ? '#27ae60' : '#e74c3c' }}>
+      <div className="text-sm mb-4">
+        <span className="text-gray-600">Estoque: </span>
+        <strong className={product.stock > 0 ? 'text-green-600' : 'text-red-600'}>
           {product.stock} unidades
         </strong>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+      <div className="flex gap-2 mt-4">
         <button
-          className="btn btn-primary"
+          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors"
           onClick={() => onEdit(product)}
-          style={{ flex: 1 }}
         >
           Editar
         </button>
         <button
-          className="btn btn-danger"
+          className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md transition-colors"
           onClick={() => onDelete(product.id)}
-          style={{ flex: 1 }}
         >
           Excluir
         </button>

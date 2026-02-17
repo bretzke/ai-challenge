@@ -33,3 +33,11 @@ backend/.vs/
 backend/ecommerce.db
 backend/ecommerce.db-shm
 backend/ecommerce.db-wal
+
+# Environment variables
+backend/.env
+backend/.env.local
+backend/.env.*.local
+.env
+.env.local
+.env.*.local

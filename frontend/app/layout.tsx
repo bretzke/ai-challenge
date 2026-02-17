@@ -15,21 +15,29 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        <nav className="navbar">
-          <div className="container">
-            <Link href="/" className="logo">
-              🛒 E-commerce AI
-            </Link>
-            <div className="nav-links">
-              <Link href="/">Produtos (SSR)</Link>
-              <Link href="/about">Sobre (SSG)</Link>
-              <Link href="/ai-assistant">Assistente IA (CSR)</Link>
+        <nav className="bg-slate-900 text-white shadow-md">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex justify-between items-center">
+              <Link href="/" className="text-2xl font-bold hover:opacity-80 transition-opacity">
+                🛒 E-commerce AI
+              </Link>
+              <div className="flex gap-8">
+                <Link href="/" className="hover:opacity-80 transition-opacity">
+                  Produtos (SSR)
+                </Link>
+                <Link href="/about" className="hover:opacity-80 transition-opacity">
+                  Sobre (SSG)
+                </Link>
+                <Link href="/ai-assistant" className="hover:opacity-80 transition-opacity">
+                  Assistente IA (CSR)
+                </Link>
+              </div>
             </div>
           </div>
         </nav>
-        <main>{children}</main>
-        <footer className="footer">
-          <div className="container">
+        <main className="min-h-[calc(100vh-200px)] py-8 bg-gray-50">{children}</main>
+        <footer className="bg-slate-900 text-white text-center py-6 mt-12">
+          <div className="container mx-auto px-4">
             <p>&copy; 2026 E-commerce AI Assistant. Todos os direitos reservados.</p>
           </div>
         </footer>

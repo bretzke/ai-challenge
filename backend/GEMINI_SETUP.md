@@ -10,48 +10,53 @@
 
 ## Configuração no Projeto
 
-### Opção 1: appsettings.json (Desenvolvimento)
+### Opção 1: Arquivo .env (Recomendado)
 
-Edite `backend/appsettings.Development.json`:
+1. Na pasta `backend`, copie o arquivo de exemplo:
+```bash
+cp .env.example .env
+```
 
+2. Edite o arquivo `.env` e adicione sua API Key:
+```env
+GEMINI_API_KEY=sua_api_key_aqui
+```
+
+3. O arquivo `.env` já está no `.gitignore` e não será commitado.
+
+### Opção 2: Variáveis de Ambiente do Sistema
+
+No Windows (PowerShell):
+```powershell
+$env:GEMINI_API_KEY = "sua_api_key_aqui"
+```
+
+No Linux/Mac:
+```bash
+export GEMINI_API_KEY="sua_api_key_aqui"
+```
+
+### Opção 3: appsettings.json (Não Recomendado)
+
+⚠️ **Atenção**: Não é recomendado colocar a API Key diretamente no `appsettings.json` pois pode ser commitada no Git.
+
+Se necessário, você pode adicionar no `appsettings.Development.json`:
 ```json
 {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
   "Gemini": {
-    "ApiKey": "SUA_API_KEY_AQUI",
+    "ApiKey": "SUA_API_KEY",
     "Model": "gemini-2.0-flash"
   }
 }
 ```
 
-### Opção 2: Variáveis de Ambiente (Recomendado para Produção)
+## Ordem de Prioridade
 
-No Windows (PowerShell):
-```powershell
-$env:Gemini__ApiKey = "SUA_API_KEY_AQUI"
-```
+O sistema busca a API Key na seguinte ordem:
 
-No Linux/Mac:
-```bash
-export Gemini__ApiKey="SUA_API_KEY_AQUI"
-```
-
-Ou crie um arquivo `.env` na pasta `backend`:
-```
-Gemini__ApiKey=SUA_API_KEY_AQUI
-```
-
-### Opção 3: User Secrets (Desenvolvimento - Mais Seguro)
-
-```bash
-cd backend
-dotnet user-secrets set "Gemini:ApiKey" "SUA_API_KEY_AQUI"
-```
+1. **Variável de ambiente `GEMINI_API_KEY`** (mais segura)
+2. `appsettings.json` → `Gemini:ApiKey`
+3. Lança exceção se não encontrar
 
 ## Verificação
 
@@ -62,19 +67,29 @@ cd backend
 dotnet run
 ```
 
-Se a API Key estiver configurada corretamente, o serviço iniciará sem erros.
+Se a API Key estiver configurada corretamente, o serviço iniciará sem erros e você verá no log:
+```
+Using Gemini API version: v1 with model: gemini-2.0-flash
+```
+
+## Segurança
+
+- ✅ **Use `.env`**: Arquivo `.env` está no `.gitignore` e não será commitado
+- ✅ **Não commite chaves**: Nunca commite arquivos `.env` ou `appsettings.json` com chaves reais
+- ✅ **Use variáveis de ambiente**: Em produção, use variáveis de ambiente do sistema ou serviços de secrets
 
 ## Limites e Custos
 
-- **Gemini Pro**: Gratuito até certo limite de requisições
+- **Gemini 2.0 Flash**: Gratuito até certo limite de requisições
 - Consulte: https://ai.google.dev/pricing
 - Para produção, considere limites de rate e custos
 
 ## Troubleshooting
 
 ### Erro: "Gemini API Key not configured"
-- Verifique se a chave está no `appsettings.json` ou variável de ambiente
-- Certifique-se de que o nome da configuração está correto: `Gemini:ApiKey`
+- Verifique se o arquivo `.env` existe na pasta `backend`
+- Verifique se a variável `GEMINI_API_KEY` está definida corretamente
+- Certifique-se de que não há espaços extras na chave
 
 ### Erro: "401 Unauthorized"
 - Verifique se a API Key está correta

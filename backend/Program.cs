@@ -4,6 +4,24 @@ using ECommerceAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load environment variables from .env file (for development)
+if (builder.Environment.IsDevelopment())
+{
+    var root = Directory.GetCurrentDirectory();
+    var dotenv = Path.Combine(root, ".env");
+    if (File.Exists(dotenv))
+    {
+        foreach (var line in File.ReadAllLines(dotenv))
+        {
+            var parts = line.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 2)
+            {
+                Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+            }
+        }
+    }
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

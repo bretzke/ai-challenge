@@ -4,8 +4,17 @@
 
 ### 1. Backend (.NET)
 
+**Antes de executar, configure a API Key do Gemini:**
+
 ```bash
 cd backend
+cp .env.example .env
+# Edite o arquivo .env e adicione sua API Key: GEMINI_API_KEY=sua_chave_aqui
+```
+
+Depois execute:
+
+```bash
 dotnet restore
 dotnet run
 ```

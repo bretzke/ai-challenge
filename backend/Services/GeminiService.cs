@@ -19,7 +19,10 @@ public class GeminiService : IGeminiService
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
-        _apiKey = _configuration["Gemini:ApiKey"] ?? throw new InvalidOperationException("Gemini API Key not configured");
+        // Try to get API key from environment variable first, then from configuration
+        _apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY") 
+                  ?? _configuration["Gemini:ApiKey"] 
+                  ?? throw new InvalidOperationException("Gemini API Key not configured. Set GEMINI_API_KEY environment variable or configure in appsettings.json");
         _modelName = _configuration["Gemini:Model"] ?? "gemini-2.0-flash"; // Default to gemini-2.0-flash
         
         // Use stable v1 API
@@ -170,7 +173,16 @@ Pergunta do usuário: {question}
 Dados retornados da consulta:
 {dataJson}
 
-Gere uma resposta clara, natural e útil em português brasileiro baseada nos dados acima. 
+IMPORTANTE: Gere uma resposta clara, natural e útil em português brasileiro baseada nos dados acima.
+Use formatação Markdown para melhorar a legibilidade:
+- Use **negrito** para destacar informações importantes
+- Use *itálico* para ênfase
+- Use listas quando apropriado
+- Use tabelas se os dados forem tabulares
+- Use `` para valores em código de programação
+- Use cabeçalhos (##) para organizar seções quando necessário.
+- Use - para listas não ordenadas
+
 Seja conciso mas informativo. Se não houver dados, explique isso de forma amigável.";
 
             var requestBody = new

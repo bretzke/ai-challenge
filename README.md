@@ -161,21 +161,22 @@ Se não configurar, o frontend usará `http://localhost:5000/api` por padrão.
 **Configuração**:
 
 1. Obtenha uma API Key do Google Gemini em: https://makersuite.google.com/app/apikey
-2. Configure no `appsettings.json` ou `appsettings.Development.json`:
+2. Configure usando variável de ambiente (recomendado):
 
-```json
-{
-  "Gemini": {
-    "ApiKey": "SUA_API_KEY_AQUI",
-    "Model": "gemini-2.0-flash"
-  }
-}
+```bash
+# Na pasta backend, copie o arquivo de exemplo
+cp .env.example .env
+
+# Edite o arquivo .env e adicione sua API Key
+GEMINI_API_KEY=sua_api_key_aqui
 ```
 
 **Opções de Configuração**:
-
-- `ApiKey` (obrigatório): Sua chave de API do Google Gemini
+- **Variável de ambiente `GEMINI_API_KEY`** (recomendado): Mais segura, não será commitada
+- `appsettings.json` → `Gemini:ApiKey` (alternativa): Menos seguro, pode ser commitado acidentalmente
 - `Model` (opcional): Modelo a usar. Padrão: `gemini-2.0-flash`
+
+**Ordem de Prioridade**: O sistema busca a API Key primeiro na variável de ambiente `GEMINI_API_KEY`, depois no `appsettings.json`.
 
 **Nota**: A aplicação usa a API v1 (estável) do Gemini. O modelo `gemini-2.0-flash` é o recomendado para melhor performance e precisão.
 

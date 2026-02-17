@@ -7,3 +7,8 @@ obj/
 ecommerce.db
 ecommerce.db-shm
 ecommerce.db-wal
+
+# Environment variables
+.env
+.env.local
+.env.*.local
