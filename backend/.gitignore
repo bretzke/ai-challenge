@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+ecommerce.db
+ecommerce.db-shm
+ecommerce.db-wal
