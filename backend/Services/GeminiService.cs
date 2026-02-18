@@ -157,24 +157,24 @@ public class GeminiService : IGeminiService
         try
         {
             var dataJson = JsonConvert.SerializeObject(data, Formatting.Indented);
-            var prompt = $@"Você é um assistente de IA que ajuda usuários a entender dados de um e-commerce.
+            var prompt = $@"
+              Você é um assistente de IA que ajuda usuários a entender dados de um e-commerce.
+              Pergunta do usuário: {question}
 
-Pergunta do usuário: {question}
+              Dados retornados da consulta:
+              {dataJson}
 
-Dados retornados da consulta:
-{dataJson}
+              IMPORTANTE: Gere uma resposta clara, natural e útil em português brasileiro baseada nos dados acima.
+              Use formatação Markdown para melhorar a legibilidade:
+              - Use **negrito** para destacar informações importantes
+              - Use *itálico* para ênfase
+              - Use listas quando apropriado
+              - Use tabelas se os dados forem tabulares
+              - Use `` para valores em código de programação
+              - Use cabeçalhos (##) para organizar seções quando necessário.
+              - Use - para listas não ordenadas
 
-IMPORTANTE: Gere uma resposta clara, natural e útil em português brasileiro baseada nos dados acima.
-Use formatação Markdown para melhorar a legibilidade:
-- Use **negrito** para destacar informações importantes
-- Use *itálico* para ênfase
-- Use listas quando apropriado
-- Use tabelas se os dados forem tabulares
-- Use `` para valores em código de programação
-- Use cabeçalhos (##) para organizar seções quando necessário.
-- Use - para listas não ordenadas
-
-Seja conciso mas informativo. Se não houver dados, explique isso de forma amigável.";
+              Seja conciso mas informativo. Se não houver dados, explique isso de forma amigável.";
             return await CallGeminiForTextAsync(prompt);
         }
         catch (Exception ex)
